@@ -47,7 +47,7 @@ class ReportRetrievalServiceSpec
   private val mockIhtpReportConnector: IhtpReportConnector = mock[IhtpReportConnector]
   private val service = new ReportRetrievalService(mockUserAnswersRepository, mockIhtpReportConnector)
 
-  "getAllReports" - {
+  "getOverview" - {
     "return return all reports in the payload" in {
 //      val testUserAnswers = UserAnswers(
 //        testUserAnswersId,
@@ -87,7 +87,7 @@ class ReportRetrievalServiceSpec
 //          "didPrSubmit" -> true
 //        )
 //      )
-      //when(mockUserAnswersRepository.get(testUserAnswersId)).thenReturn(Future.successful(Some(testUserAnswers)))
+      // when(mockUserAnswersRepository.get(testUserAnswersId)).thenReturn(Future.successful(Some(testUserAnswers)))
 //      when(mockIhtpReportConnector.submitReport(any[IhtpReportSubmission]())(any[HeaderCarrier]()))
 //        .thenReturn(Future.successful(Right(testSubmissionResponse)))
 
@@ -105,8 +105,7 @@ class ReportRetrievalServiceSpec
           )
         )
 
-
-      val result = service.getAllReports(testPstr, testDateFrom, testDateTo, None).futureValue
+      val result = service.getOverview(testPstr, testDateFrom, testDateTo, None).futureValue
       result.isRight mustBe true
     }
 

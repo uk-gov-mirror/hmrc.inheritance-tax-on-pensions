@@ -26,14 +26,13 @@ import uk.gov.hmrc.inheritancetaxonpensions.repositories.UserAnswersRepository
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ReportRetrievalService @Inject()(
+class ReportRetrievalService @Inject() (
   userAnswersRepository: UserAnswersRepository,
   ihtpReportConnector: IhtpReportConnector
-)(implicit ec: ExecutionContext){
+)(implicit ec: ExecutionContext) {
 
-  def getAllReports(pstr: String, dateFrom: String, dateTo: String, status: Option[String])(implicit
+  def getOverview(pstr: String, dateFrom: String, dateTo: String, status: Option[String])(implicit
     hc: HeaderCarrier
-  ): Future[Either[ErrorResponse, JsValue]] = {
+  ): Future[Either[ErrorResponse, JsValue]] =
     ihtpReportConnector.getOverview(pstr, dateFrom, dateTo, status)
-  }
 }

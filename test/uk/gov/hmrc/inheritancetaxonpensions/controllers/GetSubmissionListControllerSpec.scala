@@ -17,21 +17,22 @@
 package uk.gov.hmrc.inheritancetaxonpensions.controllers
 
 import play.api.test.{FakeRequest, Helpers}
-import uk.gov.hmrc.inheritancetaxonpensions.connectors.{IhtpReportConnector, SchemeDetailsConnector}
+import uk.gov.hmrc.inheritancetaxonpensions.connectors.SchemeDetailsConnector
 import play.api.http.Status
 import play.api.inject.bind
 import uk.gov.hmrc.auth.core.{AuthConnector, Enrolments}
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier}
 import uk.gov.hmrc.inheritancetaxonpensions.repositories.SessionSchemeDetailsRepository
-import uk.gov.hmrc.inheritancetaxonpensions.config.Constants._
-import org.mockito.ArgumentMatchers.{any, eq => eqTo}
-import play.api.test.Helpers._
-import org.mockito.Mockito._
+import uk.gov.hmrc.inheritancetaxonpensions.config.Constants.*
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import play.api.test.Helpers.*
+import org.mockito.Mockito.*
 import utils.BaseSpec
 import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModule}
 import play.api.Application
 import play.api.libs.json.Json
+import uk.gov.hmrc.inheritancetaxonpensions.services.ReportRetrievalService
 
 import scala.concurrent.Future
 
@@ -42,14 +43,14 @@ class GetSubmissionListControllerSpec extends BaseSpec:
   private val fakeRequest = FakeRequest("GET", "/")
   private val mockAuthConnector: AuthConnector = mock[AuthConnector]
   private val mockSchemeDetailsConnector: SchemeDetailsConnector = mock[SchemeDetailsConnector]
-  private val mockIhtpReportConnector: IhtpReportConnector = mock[IhtpReportConnector]
+  private val mockReportRetrievalService: ReportRetrievalService = mock[ReportRetrievalService]
   private val mockSessionSchemeDetailsRepository: SessionSchemeDetailsRepository = mock[SessionSchemeDetailsRepository]
 
   override def beforeEach(): Unit = {
     reset(
       mockAuthConnector,
       mockSchemeDetailsConnector,
-      mockIhtpReportConnector,
+      mockReportRetrievalService,
       mockSessionSchemeDetailsRepository
     )
 
@@ -59,7 +60,7 @@ class GetSubmissionListControllerSpec extends BaseSpec:
     Seq(
       bind[AuthConnector].toInstance(mockAuthConnector),
       bind[SchemeDetailsConnector].toInstance(mockSchemeDetailsConnector),
-      bind[IhtpReportConnector].toInstance(mockIhtpReportConnector),
+      bind[ReportRetrievalService].toInstance(mockReportRetrievalService),
       bind[SessionSchemeDetailsRepository].toInstance(mockSessionSchemeDetailsRepository)
     )
 
@@ -92,7 +93,7 @@ class GetSubmissionListControllerSpec extends BaseSpec:
         )
       when(mockSchemeDetailsConnector.checkAssociation(any(), any(), any())(any(), any()))
         .thenReturn(Future.successful(true))
-      when(mockIhtpReportConnector.getOverview(any(), any(), any(), any())(any()))
+      when(mockReportRetrievalService.getOverview(any(), any(), any(), any())(any()))
         .thenReturn(
           Future.successful(
             Right(
@@ -119,7 +120,7 @@ class GetSubmissionListControllerSpec extends BaseSpec:
       )
       verify(mockAuthConnector, times(1)).authorise(any(), any())(any(), any())
       verify(mockSchemeDetailsConnector, times(1)).checkAssociation(any(), any(), any())(any(), any())
-      verify(mockIhtpReportConnector, times(1)).getOverview(
+      verify(mockReportRetrievalService, times(1)).getOverview(
         eqTo(pstr),
         eqTo("2026-01-01"),
         eqTo("2026-12-31"),
@@ -145,7 +146,7 @@ class GetSubmissionListControllerSpec extends BaseSpec:
         )
       }
 
-      verify(mockIhtpReportConnector, never).getOverview(any(), any(), any(), any())(any())
+      verify(mockReportRetrievalService, never).getOverview(any(), any(), any(), any())(any())
     }
 
     "return 400 when dateTo is missing" in {
@@ -164,7 +165,7 @@ class GetSubmissionListControllerSpec extends BaseSpec:
         )
       }
 
-      verify(mockIhtpReportConnector, never).getOverview(any(), any(), any(), any())(any())
+      verify(mockReportRetrievalService, never).getOverview(any(), any(), any(), any())(any())
     }
 
     "return 400 when non of required headers exist" in {
