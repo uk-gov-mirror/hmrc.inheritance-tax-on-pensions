@@ -58,6 +58,8 @@ trait TestValues extends Generators {
   val testNino: String = ninoGen.sample.get
   val testDateOfBirth = "1950-01-01"
   val testDateOfDeath = "2026-01-01"
+  val testDateFrom = "2025-01-01"
+  val testDateTo = "2026-01-01"
   val testPaymentNoticeDate = "2026-03-27"
   val testAddressLine1 = "1 ABCDE Street"
   val testAddressLine2 = "FGHIJ Town"
