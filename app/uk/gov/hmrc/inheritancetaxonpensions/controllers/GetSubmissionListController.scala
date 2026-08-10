@@ -52,7 +52,7 @@ class GetSubmissionListController @Inject() (
       val status = request.getQueryString("status")
 
       reportRetrievalService.getOverview(pstr, dateFrom, dateTo, status).map {
-        case Right(response) => Ok(response)
+        case Right(response) => Ok(Json.toJson(response))
         case Left(error) => Status(error.statusCode)(Json.obj("message" -> error.message))
       }
     }

@@ -18,8 +18,8 @@ package uk.gov.hmrc.inheritancetaxonpensions.services
 
 import uk.gov.hmrc.inheritancetaxonpensions.connectors.IhtpReportConnector
 import com.google.inject.{Inject, Singleton}
-import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.HeaderCarrier
+import models.IhtpOverviewResponse
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 import uk.gov.hmrc.inheritancetaxonpensions.repositories.UserAnswersRepository
 
@@ -33,6 +33,6 @@ class ReportRetrievalService @Inject() (
 
   def getOverview(pstr: String, dateFrom: String, dateTo: String, status: Option[String])(implicit
     hc: HeaderCarrier
-  ): Future[Either[ErrorResponse, JsValue]] =
+  ): Future[Either[ErrorResponse, IhtpOverviewResponse]] =
     ihtpReportConnector.getOverview(pstr, dateFrom, dateTo, status)
 }

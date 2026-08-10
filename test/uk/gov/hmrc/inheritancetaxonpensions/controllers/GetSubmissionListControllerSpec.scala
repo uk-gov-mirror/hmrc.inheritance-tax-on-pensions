@@ -20,19 +20,21 @@ import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.inheritancetaxonpensions.connectors.SchemeDetailsConnector
 import play.api.http.Status
 import play.api.inject.bind
-import uk.gov.hmrc.auth.core.{AuthConnector, Enrolments}
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier}
+import models.{IhtpOverviewResponse, IhtpOverviewSuccess}
 import uk.gov.hmrc.inheritancetaxonpensions.repositories.SessionSchemeDetailsRepository
-import uk.gov.hmrc.inheritancetaxonpensions.config.Constants.*
-import org.mockito.ArgumentMatchers.{any, eq as eqTo}
-import play.api.test.Helpers.*
-import org.mockito.Mockito.*
+import uk.gov.hmrc.inheritancetaxonpensions.config.Constants._
+import uk.gov.hmrc.inheritancetaxonpensions.models.ErrorCodes
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
+import play.api.test.Helpers._
+import org.mockito.Mockito._
 import utils.BaseSpec
 import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModule}
+import uk.gov.hmrc.inheritancetaxonpensions.services.ReportRetrievalService
+import uk.gov.hmrc.auth.core.{AuthConnector, Enrolments}
 import play.api.Application
 import play.api.libs.json.Json
-import uk.gov.hmrc.inheritancetaxonpensions.services.ReportRetrievalService
 
 import scala.concurrent.Future
 
@@ -86,7 +88,7 @@ class GetSubmissionListControllerSpec extends BaseSpec:
     requestWithRequiredHeaders("/?dateFrom=2026-01-01&dateTo=2026-12-31")
 
   "GET submission list" must {
-    "return 200" in {
+    "should return 200" in {
       when(mockAuthConnector.authorise[Option[String] ~ Enrolments](any(), any())(any(), any()))
         .thenReturn(
           Future.successful(new ~(Some(externalId), enrolments))
@@ -96,14 +98,7 @@ class GetSubmissionListControllerSpec extends BaseSpec:
       when(mockReportRetrievalService.getOverview(any(), any(), any(), any())(any()))
         .thenReturn(
           Future.successful(
-            Right(
-              Json.obj(
-                "success" -> Json.obj(
-                  "pstr" -> pstr,
-                  "ihtpOverview" -> Json.arr()
-                )
-              )
-            )
+            Right(IhtpOverviewResponse(IhtpOverviewSuccess(Seq())))
           )
         )
 
@@ -114,7 +109,6 @@ class GetSubmissionListControllerSpec extends BaseSpec:
       status(result) mustEqual Status.OK
       contentAsJson(result) mustEqual Json.obj(
         "success" -> Json.obj(
-          "pstr" -> pstr,
           "ihtpOverview" -> Json.arr()
         )
       )
@@ -130,7 +124,7 @@ class GetSubmissionListControllerSpec extends BaseSpec:
       )
     }
 
-    "return 400 when dateFrom is missing" in {
+    "should return 400 when dateFrom is missing" in {
       when(mockAuthConnector.authorise[Option[String] ~ Enrolments](any(), any())(any(), any()))
         .thenReturn(
           Future.successful(new ~(Some(externalId), enrolments))
@@ -149,7 +143,7 @@ class GetSubmissionListControllerSpec extends BaseSpec:
       verify(mockReportRetrievalService, never).getOverview(any(), any(), any(), any())(any())
     }
 
-    "return 400 when dateTo is missing" in {
+    "should return 400 when dateTo is missing" in {
       when(mockAuthConnector.authorise[Option[String] ~ Enrolments](any(), any())(any(), any()))
         .thenReturn(
           Future.successful(new ~(Some(externalId), enrolments))
@@ -168,14 +162,14 @@ class GetSubmissionListControllerSpec extends BaseSpec:
       verify(mockReportRetrievalService, never).getOverview(any(), any(), any(), any())(any())
     }
 
-    "return 400 when non of required headers exist" in {
+    "should return 400 when non of required headers exist" in {
       intercept[BadRequestException] {
         await(controller.getSubmissionList(pstr)(fakeRequest))
       }
       verify(mockAuthConnector, never).authorise(any(), any())(any(), any())
       verify(mockSchemeDetailsConnector, never).checkAssociation(any(), any(), any())(any(), any())
     }
-    "return 400 when some of required headers don't exist" in {
+    "should return 400 when some of required headers don't exist" in {
       intercept[BadRequestException] {
         await(
           controller.getSubmissionList(pstr)(
@@ -186,4 +180,39 @@ class GetSubmissionListControllerSpec extends BaseSpec:
       verify(mockAuthConnector, never).authorise(any(), any())(any(), any())
       verify(mockSchemeDetailsConnector, never).checkAssociation(any(), any(), any())(any(), any())
     }
+
+    "should return 500 when service returns unexpected error" in {
+      when(mockAuthConnector.authorise[Option[String] ~ Enrolments](any(), any())(any(), any()))
+        .thenReturn(
+          Future.successful(new ~(Some(externalId), enrolments))
+        )
+      when(mockSchemeDetailsConnector.checkAssociation(any(), any(), any())(any(), any()))
+        .thenReturn(Future.successful(true))
+      when(mockReportRetrievalService.getOverview(any(), any(), any(), any())(any()))
+        .thenReturn(
+          Future.successful(
+            Left(ErrorCodes.unexpectedResponse)
+          )
+        )
+
+      val result = controller.getSubmissionList(pstr)(
+        requestWithRequiredHeadersAndDates
+      )
+
+      status(result) mustEqual Status.INTERNAL_SERVER_ERROR
+      contentAsJson(result) mustEqual Json.obj(
+        "message" -> "Unexpected Response"
+      )
+      verify(mockAuthConnector, times(1)).authorise(any(), any())(any(), any())
+      verify(mockSchemeDetailsConnector, times(1)).checkAssociation(any(), any(), any())(any(), any())
+      verify(mockReportRetrievalService, times(1)).getOverview(
+        eqTo(pstr),
+        eqTo("2026-01-01"),
+        eqTo("2026-12-31"),
+        eqTo(None)
+      )(
+        any[HeaderCarrier]()
+      )
+    }
+
   }

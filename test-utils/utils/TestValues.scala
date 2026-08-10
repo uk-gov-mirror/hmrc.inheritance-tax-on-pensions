@@ -18,6 +18,7 @@ package utils
 
 import generators.Generators
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
+import play.api.libs.json.{JsArray, Json}
 import uk.gov.hmrc.inheritancetaxonpensions.models.etmp.YesNo.Yes
 import uk.gov.hmrc.inheritancetaxonpensions.config.Constants.psaEnrolmentKey
 import uk.gov.hmrc.inheritancetaxonpensions.models._
@@ -51,7 +52,6 @@ trait TestValues extends Generators {
   val userName = "userName"
   val psaPspId = "psaPspId"
   val credentialRole = "credentialRole"
-  val cipPsrStatus: Option[Nothing] = None
   val sampleToday: LocalDate = LocalDate.of(2023, 10, 19)
   val psaId = "A0000000"
   val pspId = "21000005"
@@ -67,13 +67,13 @@ trait TestValues extends Generators {
   val testCountry = "GB"
   val testUserAnswersId = "testUserAnswersId"
   val testPstr = "12345678"
-  val testSubmissionResponse = IhtpReportSubmissionResponse(
+  val testSubmissionResponse: IhtpReportSubmissionResponse = IhtpReportSubmissionResponse(
     processingDateTime = Instant.now(),
     formBundleNumber = "910000000000",
     paymentReference = "123456781"
   )
 
-  val testReportSubmissionRequestBody = IhtpReportSubmission(
+  val testReportSubmissionRequestBody: IhtpReportSubmission = IhtpReportSubmission(
     ReportDetails(
       pstr = "S2400000001"
     ),
@@ -115,7 +115,7 @@ trait TestValues extends Generators {
     beneficiaries = None
   )
 
-  val testReportSubmissionRequestBodyOrganisation = IhtpReportSubmission(
+  val testReportSubmissionRequestBodyOrganisation: IhtpReportSubmission = IhtpReportSubmission(
     ReportDetails(
       pstr = "S2400000001"
     ),
@@ -171,5 +171,71 @@ trait TestValues extends Generators {
     )
   )
 
-  val testReportSubmissionResponse = IhtpReportSubmissionResponse(Instant.now(clock), "910000000000", "123456789")
+  val testReportSubmissionResponse: IhtpReportSubmissionResponse =
+    IhtpReportSubmissionResponse(Instant.now(clock), "910000000000", "123456789")
+
+  val testOverviewDraftResponse: JsArray = Json.arr(
+    Json.obj(
+      "ihtpVersion" -> "000",
+      "inheritanceTaxReference" -> "A000001/01A",
+      "ihtpStatus" -> "In progress"
+    ),
+    Json.obj(
+      "ihtpVersion" -> "000",
+      "inheritanceTaxReference" -> "A000001/01A",
+      "ihtpStatus" -> "In progress",
+      "firstForename" -> "John",
+      "surname" -> "Doe"
+    ),
+    Json.obj(
+      "ihtpVersion" -> "000",
+      "inheritanceTaxReference" -> "A000002/02A",
+      "ihtpStatus" -> "In progress",
+      "tile" -> "Ms",
+      "firstForename" -> "Jane",
+      "surname" -> "Doe"
+    )
+  )
+
+  val testOverviewResponse: JsArray = Json.arr(
+    Json.obj(
+      "fbNumber" -> "100000000000",
+      "submissionDate" -> "2026-04-10T16:12:49Z",
+      "paymentDueDate" -> "2026-10-10",
+      "ihtpVersion" -> "001",
+      "inheritanceTaxReference" -> "A123456/25A",
+      "paymentReference" -> "A123456/25A629671",
+      "title" -> "Dr",
+      "firstForename" -> "John",
+      "secondForename" -> "E",
+      "surname" -> "Doe",
+      "ihtpStatus" -> "Paid"
+    ),
+    Json.obj(
+      "fbNumber" -> "100000000000",
+      "submissionDate" -> "2026-04-10T16:12:49Z",
+      "paymentDueDate" -> "2026-10-10",
+      "ihtpVersion" -> "002",
+      "inheritanceTaxReference" -> "A123456/25A",
+      "paymentReference" -> "A123456/25A629671",
+      "title" -> "Dr",
+      "firstForename" -> "John",
+      "secondForename" -> "E",
+      "surname" -> "Doe",
+      "ihtpStatus" -> "Not reconciled"
+    ),
+    Json.obj(
+      "fbNumber" -> "200000000000",
+      "submissionDate" -> "2026-04-10T16:12:49Z",
+      "paymentDueDate" -> "2026-10-10",
+      "ihtpVersion" -> "001",
+      "inheritanceTaxReference" -> "A223456/25A",
+      "paymentReference" -> "A223456/25A629671",
+      "title" -> "Ms",
+      "firstForename" -> "Jane",
+      "secondForename" -> "E",
+      "surname" -> "Doe",
+      "ihtpStatus" -> "Not reconciled"
+    )
+  )
 }
