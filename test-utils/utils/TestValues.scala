@@ -76,6 +76,8 @@ trait TestValues extends Generators {
   val testPstr = "12345678"
   val emptyUserAnswers: UserAnswers = UserAnswers(s"$srn-$uuid", srn, uuid)
   val testIhtPaymentReference: String = "A123456/25A629671"
+  val beneficiaryOrganisationName: String = "Testdata Company Ltd"
+  val beneficiaryHmrcReferenceNumber: String = "K1234567890"
 
   val testSubmissionResponse: IhtpPaymentNoticeResponse = IhtpPaymentNoticeResponse(
     formBundleNo = "910000000000",
